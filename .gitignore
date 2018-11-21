@@ -31,3 +31,9 @@
 *.out
 *.app
 *.bat
+
+#UI design files
+*.ui
+
+#QT Project files
+*.pro

@@ -8,6 +8,12 @@
 #include <wrap/io_trimesh/import.h>
 #include <wrap/io_trimesh//export.h>
 #include <vcg/complex/complex.h>
+#include <wrap/ply/plylib.h>
+#include <wrap/ply/plylib.cpp>
+
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include<GLFW\glfw3.h>
 
 #include "..\lib\vcgIO.h"
 
@@ -37,11 +43,15 @@ class MyFace : public vcg::Face<MyUsedTypes,
 	vcg::face::FFAdj,
 	vcg::face::BitFlags > { };
 // 网格类型
+//网格包含数据：顶点、边、三角形数组（std::vector<>）；
+//每个顶点包含属性：空间坐标（3个float表示）、顶点法向量、标志位；
+//每个边包含属性：顶点指针（指向该边的两个顶点）、边 - 面邻接信息、标志位；
+//每个三角形面包含属性：顶点指针（指向该三角形的三个顶点）、面法向量、面 - 面邻接信息、标志位。
 typedef vcg::tri::TriMesh<
 	std::vector<MyVertex>,
 	std::vector<MyEdge>,
 	std::vector<MyFace> >
-	GLMesh;
+	GLMesh;//自定义网格类型
 
 using namespace std;
 using namespace vcg;
@@ -121,10 +131,10 @@ int main()
 	vcgIOReader vcgio;
 
 	string file_path = "rabbit.txt";
-	if (vcgio.readFile(file_path))
-		cout << "file read finished!" << endl;
-	else
-		cout << "file read false!" << endl;
+	//if (vcgio.readFile(file_path))
+	//	cout << "file read finished!" << endl;
+	//else
+	//	cout << "file read false!" << endl;
 	
 
 	// Mesh 文件一般至少包含顶点数组信息，还可以包含连接信息(三角形)、顶点法向量、顶点颜色、面颜色、
@@ -142,19 +152,19 @@ int main()
 	//vcg::tri::io::ExporterPLY<GLMesh>::Save(m, "file_to_save.ply", mask);
 
 	// 读取或写入 OBJ 文件的代码，mask 作用同上
-	if (vcg::tri::io::ImporterOBJ<GLMesh>::Open(m, "3-ming-nei-bujian(NS).obj", mask)
-		!= vcg::tri::io::ImporterOBJ<GLMesh>::E_NOERROR) 
-	{
-		std::cout << "Load OBJ file ERROR\n";
-	}
+	//if (vcg::tri::io::ImporterOBJ<GLMesh>::Open(m, "3-ming-nei-bujian(NS).obj", mask)
+	//	!= vcg::tri::io::ImporterOBJ<GLMesh>::E_NOERROR) 
+	//{
+	//	std::cout << "Load OBJ file ERROR\n";
+	//}
 	// some modification to m and mask ...
 	//vcg::tri::io::ExporterOBJ<GLMesh>::Save(m, "file_to_save.obj", mask);
-	//// 读取、写入网格文件，将根据文件扩展名自动匹配文件格式 ---------------------------------------
-	//int oerr = vcg::tri::io::Importer<GLMesh>::Open(m, "file_to_open.off", mask);
-	//if (oerr != 0){
-	//	std::cout << "Load mesh file ERROR: "
-	//		<< vcg::tri::io::Importer<GLMesh>::ErrorMsg(oerr) << '\n';
-	//}
+	// 读取、写入网格文件，将根据文件扩展名自动匹配文件格式 ---------------------------------------
+	int oerr = vcg::tri::io::Importer<GLMesh>::Open(m, "3-waiyan-zhutou.obj", mask);
+	if (oerr != 0){
+		std::cout << "Load mesh file ERROR: "
+			<< vcg::tri::io::Importer<GLMesh>::ErrorMsg(oerr) << '\n';
+	}
 	//// some modification to m and mask ...
 	//int serr = vcg::tri::io::Exporter<GLMesh>::Save(m, "file_to_save.3ds", mask);
 	//if (serr != 0){
@@ -162,7 +172,21 @@ int main()
 	//		<< vcg::tri::io::Exporter<GLMesh>::ErrorMsg(oerr) << '\n';
 	//}
 
+	vcg::tri::UpdateNormal<GLMesh>::PerVertexNormalized(m); // 计算顶点法向量，并单位化
+	//vcg::tri::UpdateNormal<GLMesh>::PerFaceNormalized(m); // 计算面法向量，并单位化
 
+	//GLMesh::VertexType& v = m.vert[50]; // 第 i 个顶点，假设 v.isD()==false，即未标志为已删除
+	//cout << v.N().X() << endl;
+
+
+	/*glewExperimental = GL_TRUE;
+	if (glewInit()!=GLEW_OK)
+	{
+	cout << "failed to initalize GLEW" << endl;
+	return -1;
+	}*/
+
+	
 
 	system("pause");
 
